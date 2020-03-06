@@ -1,0 +1,2 @@
+# srac2lrac
+R code for calculating the concordance statistic between short read derived MAG and long read chromosomes, as described in preprint entitled `Analysis procedures for assessing recovery of high quality, complete, closed genomes from Nanopore long read metagenome sequencing' (Arumugam, Bessarab, Haryono, Liu, Zuniga-Montanez, Roy, Qiu, Drautz-Moses, Law, Wuertz, Lauro, Huson and Williams, 2020)

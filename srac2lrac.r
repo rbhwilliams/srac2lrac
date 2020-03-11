@@ -127,7 +127,6 @@ calculate.kappa<-function(cube)
  colnames(res)<-dimnames(cube)[[2]]
  for(curr in rownames(res))
  {
-  print(curr)
   for(curc in colnames(res))
   {
    res[curr,curc]<-mean(cube[curr,curc,],na.rm=T)
@@ -191,7 +190,6 @@ augment.kappa.table<-function(kappa.df,kappaStatsCube)
   cursracBin<-paste("bin",kappa.df$sracBin[currow],sep=".")
   curres<-kappaStatsCube[curlrac,cursracBin,]
   augout<-rbind(augout,curres)
-  print(currow)
  }
  res<-data.frame(kappa.df,augout)
  res

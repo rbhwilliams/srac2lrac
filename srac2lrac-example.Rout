@@ -1,0 +1,808 @@
+
+R version 3.6.1 (2019-07-05) -- "Action of the Toes"
+Copyright (C) 2019 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+[Previously saved workspace restored]
+
+> #--example script for running concordance statistic analysis
+> #--the file srac_spades2corrlrac_canu.out was generated using: blastn -db canu_run-2018-04-09and10_corrected.fasta  -query ~/Cluster1/Reactor_Rogelio/DNA/assembly/EBPRR4XSP/contigs_2k.fasta -outfmt 6 -out srac_spades2corrlrac_canu.out
+> 
+> library(Biostrings)
+Loading required package: BiocGenerics
+Loading required package: parallel
+
+Attaching package: ‘BiocGenerics’
+
+The following objects are masked from ‘package:parallel’:
+
+    clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+    clusterExport, clusterMap, parApply, parCapply, parLapply,
+    parLapplyLB, parRapply, parSapply, parSapplyLB
+
+The following objects are masked from ‘package:stats’:
+
+    IQR, mad, sd, var, xtabs
+
+The following objects are masked from ‘package:base’:
+
+    Filter, Find, Map, Position, Reduce, anyDuplicated, append,
+    as.data.frame, basename, cbind, colnames, dirname, do.call,
+    duplicated, eval, evalq, get, grep, grepl, intersect, is.unsorted,
+    lapply, mapply, match, mget, order, paste, pmax, pmax.int, pmin,
+    pmin.int, rank, rbind, rownames, sapply, setdiff, sort, table,
+    tapply, union, unique, unsplit, which, which.max, which.min
+
+Loading required package: S4Vectors
+Loading required package: stats4
+
+Attaching package: ‘S4Vectors’
+
+The following object is masked from ‘package:base’:
+
+    expand.grid
+
+Loading required package: IRanges
+Loading required package: XVector
+
+Attaching package: ‘Biostrings’
+
+The following object is masked from ‘package:base’:
+
+    strsplit
+
+> library(abind)
+> source(file="srac2lrac.r")
+> 
+> #--load in contig summary data (lgcov,len,gc) and bin memberships
+> load(file="glq.contigs.summData.rda")
+> load(file="pao2.srBin.rda")
+> 
+> #--read in LRAC, and simplify names
+> lracFasta<-readDNAStringSet(filepath="genome.contigs.fasta")
+> names(lracFasta)<-sapply(strsplit(names(lracFasta)," "),FUN=function(x){x[1]})
+> 
+> #--Perform computation of concordance statistics
+> #--read in BLASTN tabular output
+> blastn<-read.table(file="srac_spades2corrlrac_canu.out",stringsAsFactors=F)
+> colnames(blastn)<-c("qseqid","sseqid","pident","length","mismatch","gapopen","qstart","qend","sstart","send","evalue","bitscore")
+> 
+> #--simplify contig names to be compatible with binning output
+> blastn[,1]<-sapply(strsplit(blastn[,1],"_"),FUN=function(x){paste(x[1],x[2],sep="_")})
+> 
+> #--augment this data frame with additional data
+> blastn1<-augment.srac2lrac.tables(blastn,lracFasta,glq.contigs.summData)
+> 
+> #--and take best hit among all unique srac-lrac combinations
+> blastn2<-filter.hits(blastn1)
+> 
+> #--and construct main data object
+> blastn3<-build.results.cube.extended(blastn2,lracFasta,pao2.srBin)
+[1] "tig00000011"
+[1] "tig00000076"
+[1] "tig00000026"
+[1] "tig00000013"
+[1] "tig00000001"
+[1] "tig00017191"
+[1] "tig00002071"
+[1] "tig00000198"
+[1] "tig00000241"
+[1] "tig00000237"
+[1] "tig00000196"
+[1] "tig00000453"
+[1] "tig00000493"
+[1] "tig00000246"
+[1] "tig00001784"
+[1] "tig00000191"
+[1] "tig00000148"
+[1] "tig00001110"
+[1] "tig00000142"
+[1] "tig00000075"
+[1] "tig00000137"
+[1] "tig00001890"
+[1] "tig00000149"
+[1] "tig00001418"
+[1] "tig00000041"
+[1] "tig00001062"
+[1] "tig00017235"
+[1] "tig00000065"
+[1] "tig00000213"
+[1] "tig00000094"
+[1] "tig00000138"
+[1] "tig00000208"
+[1] "tig00002180"
+[1] "tig00000052"
+[1] "tig00000024"
+[1] "tig00000091"
+[1] "tig00000119"
+[1] "tig00000022"
+[1] "tig00000207"
+[1] "tig00000131"
+[1] "tig00000099"
+[1] "tig00000220"
+[1] "tig00000050"
+[1] "tig00001154"
+[1] "tig00001459"
+[1] "tig00017227"
+[1] "tig00000949"
+[1] "tig00000118"
+[1] "tig00000051"
+[1] "tig00017226"
+[1] "tig00000103"
+[1] "tig00001922"
+[1] "tig00000144"
+[1] "tig00001469"
+[1] "tig00000340"
+[1] "tig00000283"
+[1] "tig00000063"
+[1] "tig00000233"
+[1] "tig00000301"
+[1] "tig00001712"
+[1] "tig00001724"
+[1] "tig00001662"
+[1] "tig00000239"
+[1] "tig00000081"
+[1] "tig00000287"
+[1] "tig00000169"
+[1] "tig00017214"
+[1] "tig00002179"
+[1] "tig00000292"
+[1] "tig00001778"
+[1] "tig00000174"
+[1] "tig00000179"
+[1] "tig00000216"
+[1] "tig00000014"
+[1] "tig00000152"
+[1] "tig00001325"
+[1] "tig00000317"
+[1] "tig00001419"
+[1] "tig00000210"
+[1] "tig00001883"
+[1] "tig00002030"
+[1] "tig00001749"
+[1] "tig00017231"
+[1] "tig00000092"
+[1] "tig00017230"
+[1] "tig00000593"
+[1] "tig00000045"
+[1] "tig00001260"
+[1] "tig00001782"
+[1] "tig00017236"
+[1] "tig00000186"
+[1] "tig00000262"
+[1] "tig00000108"
+[1] "tig00001866"
+[1] "tig00000040"
+[1] "tig00000173"
+[1] "tig00001898"
+[1] "tig00000603"
+[1] "tig00000192"
+[1] "tig00000164"
+[1] "tig00000374"
+[1] "tig00000843"
+[1] "tig00001250"
+[1] "tig00000176"
+[1] "tig00000814"
+[1] "tig00000442"
+[1] "tig00000082"
+[1] "tig00017204"
+[1] "tig00017205"
+[1] "tig00000386"
+[1] "tig00000245"
+[1] "tig00001185"
+[1] "tig00001014"
+[1] "tig00002276"
+[1] "tig00000025"
+[1] "tig00000058"
+[1] "tig00001860"
+[1] "tig00000921"
+[1] "tig00000379"
+[1] "tig00002293"
+[1] "tig00000136"
+[1] "tig00000027"
+[1] "tig00002341"
+[1] "tig00000057"
+[1] "tig00002026"
+[1] "tig00000365"
+[1] "tig00000073"
+[1] "tig00001393"
+[1] "tig00001342"
+[1] "tig00000020"
+[1] "tig00000129"
+[1] "tig00001970"
+[1] "tig00000083"
+[1] "tig00000086"
+[1] "tig00000766"
+[1] "tig00000647"
+[1] "tig00000165"
+[1] "tig00000029"
+[1] "tig00002295"
+[1] "tig00001386"
+[1] "tig00000215"
+[1] "tig00000254"
+[1] "tig00001037"
+[1] "tig00001254"
+[1] "tig00000971"
+[1] "tig00017196"
+[1] "tig00000274"
+[1] "tig00001774"
+[1] "tig00000064"
+[1] "tig00000059"
+[1] "tig00000028"
+[1] "tig00001707"
+[1] "tig00000988"
+[1] "tig00001734"
+[1] "tig00000393"
+[1] "tig00000775"
+[1] "tig00000021"
+[1] "tig00001937"
+[1] "tig00001892"
+[1] "tig00001142"
+[1] "tig00001901"
+[1] "tig00001191"
+[1] "tig00000278"
+[1] "tig00000641"
+[1] "tig00002100"
+[1] "tig00001667"
+[1] "tig00000132"
+[1] "tig00000456"
+[1] "tig00001354"
+[1] "tig00001742"
+[1] "tig00000110"
+[1] "tig00002344"
+[1] "tig00002156"
+[1] "tig00001852"
+[1] "tig00000160"
+[1] "tig00000822"
+[1] "tig00001440"
+[1] "tig00000665"
+[1] "tig00000840"
+[1] "tig00000364"
+[1] "tig00000546"
+[1] "tig00000153"
+[1] "tig00000986"
+[1] "tig00001714"
+[1] "tig00000589"
+[1] "tig00000855"
+[1] "tig00001538"
+[1] "tig00000313"
+[1] "tig00000068"
+[1] "tig00000713"
+[1] "tig00000369"
+[1] "tig00000705"
+[1] "tig00001010"
+[1] "tig00001005"
+[1] "tig00002273"
+[1] "tig00001013"
+[1] "tig00002288"
+[1] "tig00001685"
+[1] "tig00000090"
+[1] "tig00001613"
+[1] "tig00002269"
+[1] "tig00017200"
+[1] "tig00001767"
+[1] "tig00001102"
+[1] "tig00002002"
+[1] "tig00001130"
+[1] "tig00001016"
+[1] "tig00000218"
+[1] "tig00002157"
+[1] "tig00001536"
+[1] "tig00001824"
+[1] "tig00000202"
+[1] "tig00000499"
+[1] "tig00000175"
+[1] "tig00000106"
+[1] "tig00017193"
+[1] "tig00017234"
+[1] "tig00000236"
+[1] "tig00000963"
+[1] "tig00017201"
+[1] "tig00001695"
+[1] "tig00001219"
+[1] "tig00000193"
+[1] "tig00001245"
+[1] "tig00000209"
+[1] "tig00000738"
+[1] "tig00000577"
+[1] "tig00000608"
+[1] "tig00017215"
+[1] "tig00000970"
+[1] "tig00001148"
+[1] "tig00017213"
+[1] "tig00017212"
+[1] "tig00000395"
+[1] "tig00000881"
+[1] "tig00001269"
+[1] "tig00001168"
+[1] "tig00000221"
+[1] "tig00001638"
+[1] "tig00000367"
+[1] "tig00002189"
+[1] "tig00002078"
+[1] "tig00001144"
+[1] "tig00001017"
+[1] "tig00001506"
+[1] "tig00000609"
+[1] "tig00000914"
+[1] "tig00001769"
+[1] "tig00000322"
+[1] "tig00000893"
+[1] "tig00000880"
+[1] "tig00000265"
+[1] "tig00002070"
+[1] "tig00001252"
+[1] "tig00000253"
+[1] "tig00000431"
+[1] "tig00001204"
+[1] "tig00000381"
+[1] "tig00000361"
+[1] "tig00000309"
+[1] "tig00000184"
+[1] "tig00002168"
+[1] "tig00001446"
+[1] "tig00000688"
+[1] "tig00002272"
+[1] "tig00001075"
+[1] "tig00001509"
+[1] "tig00017207"
+[1] "tig00000679"
+[1] "tig00017206"
+[1] "tig00001917"
+[1] "tig00001265"
+[1] "tig00001550"
+[1] "tig00001391"
+[1] "tig00001236"
+[1] "tig00001830"
+[1] "tig00001596"
+[1] "tig00000969"
+[1] "tig00000542"
+[1] "tig00001602"
+[1] "tig00017221"
+[1] "tig00017220"
+[1] "tig00000858"
+[1] "tig00001235"
+[1] "tig00000547"
+[1] "tig00000298"
+[1] "tig00000978"
+[1] "tig00000098"
+[1] "tig00002145"
+[1] "tig00001423"
+[1] "tig00000848"
+[1] "tig00000736"
+[1] "tig00000370"
+[1] "tig00001810"
+[1] "tig00002198"
+[1] "tig00000030"
+[1] "tig00001731"
+[1] "tig00000548"
+[1] "tig00000545"
+[1] "tig00001806"
+[1] "tig00000664"
+[1] "tig00001615"
+[1] "tig00000889"
+[1] "tig00001070"
+[1] "tig00002283"
+[1] "tig00001605"
+[1] "tig00000719"
+[1] "tig00000790"
+[1] "tig00002081"
+[1] "tig00001288"
+[1] "tig00001455"
+[1] "tig00000870"
+[1] "tig00000741"
+[1] "tig00002329"
+[1] "tig00001065"
+[1] "tig00001274"
+[1] "tig00000238"
+[1] "tig00002346"
+[1] "tig00000282"
+[1] "tig00000325"
+[1] "tig00000258"
+[1] "tig00001294"
+[1] "tig00000686"
+[1] "tig00000037"
+[1] "tig00000972"
+[1] "tig00001661"
+[1] "tig00001574"
+[1] "tig00001621"
+[1] "tig00000226"
+[1] "tig00000732"
+[1] "tig00002340"
+[1] "tig00000718"
+[1] "tig00001911"
+[1] "tig00002005"
+[1] "tig00000389"
+[1] "tig00000795"
+[1] "tig00001654"
+[1] "tig00001412"
+[1] "tig00000388"
+[1] "tig00001756"
+[1] "tig00002207"
+[1] "tig00001149"
+[1] "tig00000739"
+[1] "tig00000754"
+[1] "tig00001475"
+[1] "tig00000865"
+[1] "tig00000666"
+[1] "tig00001451"
+[1] "tig00000567"
+[1] "tig00002161"
+[1] "tig00001766"
+[1] "tig00000648"
+[1] "tig00001878"
+[1] "tig00000621"
+[1] "tig00000696"
+[1] "tig00001833"
+[1] "tig00000942"
+[1] "tig00001281"
+[1] "tig00000897"
+[1] "tig00001746"
+[1] "tig00000989"
+[1] "tig00001138"
+[1] "tig00001975"
+[1] "tig00002151"
+[1] "tig00001355"
+[1] "tig00001170"
+[1] "tig00000853"
+[1] "tig00000806"
+[1] "tig00001952"
+[1] "tig00000768"
+[1] "tig00001101"
+[1] "tig00017192"
+[1] "tig00000644"
+[1] "tig00000363"
+[1] "tig00000975"
+[1] "tig00002174"
+[1] "tig00001684"
+[1] "tig00001001"
+[1] "tig00001786"
+[1] "tig00001297"
+[1] "tig00000913"
+[1] "tig00002287"
+[1] "tig00000457"
+[1] "tig00001792"
+[1] "tig00000281"
+[1] "tig00001588"
+[1] "tig00002178"
+[1] "tig00001741"
+[1] "tig00000554"
+[1] "tig00001962"
+[1] "tig00000990"
+[1] "tig00000844"
+[1] "tig00001167"
+[1] "tig00000640"
+[1] "tig00000297"
+[1] "tig00000776"
+[1] "tig00002235"
+[1] "tig00001290"
+[1] "tig00001781"
+[1] "tig00000212"
+[1] "tig00001572"
+[1] "tig00000967"
+[1] "tig00000722"
+[1] "tig00000157"
+[1] "tig00001350"
+[1] "tig00001091"
+[1] "tig00000798"
+[1] "tig00000700"
+[1] "tig00000878"
+[1] "tig00001537"
+[1] "tig00001296"
+[1] "tig00001240"
+[1] "tig00001069"
+[1] "tig00000985"
+[1] "tig00000917"
+[1] "tig00001783"
+[1] "tig00001038"
+[1] "tig00000002"
+[1] "tig00000380"
+[1] "tig00000304"
+[1] "tig00001669"
+[1] "tig00002010"
+[1] "tig00000243"
+[1] "tig00001083"
+[1] "tig00001077"
+[1] "tig00000888"
+[1] "tig00000598"
+[1] "tig00000791"
+[1] "tig00000964"
+[1] "tig00001122"
+[1] "tig00001599"
+[1] "tig00000991"
+[1] "tig00000280"
+[1] "tig00000668"
+[1] "tig00000404"
+[1] "tig00002345"
+[1] "tig00000856"
+[1] "tig00001298"
+[1] "tig00000792"
+[1] "tig00001051"
+[1] "tig00000993"
+[1] "tig00001397"
+[1] "tig00000580"
+[1] "tig00001126"
+[1] "tig00001885"
+[1] "tig00000781"
+[1] "tig00001740"
+[1] "tig00000890"
+[1] "tig00001146"
+[1] "tig00000682"
+[1] "tig00000674"
+[1] "tig00001812"
+[1] "tig00000156"
+[1] "tig00001158"
+[1] "tig00001413"
+[1] "tig00000557"
+[1] "tig00002051"
+[1] "tig00001366"
+[1] "tig00001338"
+[1] "tig00001028"
+[1] "tig00000826"
+[1] "tig00001902"
+[1] "tig00001721"
+[1] "tig00001788"
+[1] "tig00017225"
+[1] "tig00001417"
+[1] "tig00001888"
+[1] "tig00001453"
+[1] "tig00002113"
+[1] "tig00001249"
+[1] "tig00017228"
+[1] "tig00017229"
+[1] "tig00001209"
+[1] "tig00000746"
+[1] "tig00002349"
+[1] "tig00000197"
+[1] "tig00002194"
+[1] "tig00001143"
+[1] "tig00002237"
+[1] "tig00001683"
+[1] "tig00002077"
+[1] "tig00001152"
+[1] "tig00000555"
+[1] "tig00000909"
+[1] "tig00001636"
+[1] "tig00002017"
+[1] "tig00001544"
+[1] "tig00001436"
+[1] "tig00001118"
+[1] "tig00002127"
+[1] "tig00002190"
+[1] "tig00000816"
+[1] "tig00001979"
+[1] "tig00000995"
+[1] "tig00000371"
+[1] "tig00001468"
+[1] "tig00001089"
+[1] "tig00002025"
+[1] "tig00001785"
+[1] "tig00000633"
+[1] "tig00002101"
+[1] "tig00001474"
+[1] "tig00017210"
+[1] "tig00017211"
+[1] "tig00000573"
+[1] "tig00001758"
+[1] "tig00001385"
+[1] "tig00000854"
+[1] "tig00002348"
+[1] "tig00002347"
+[1] "tig00000572"
+[1] "tig00002281"
+[1] "tig00000811"
+[1] "tig00000159"
+[1] "tig00000861"
+[1] "tig00001770"
+[1] "tig00002277"
+[1] "tig00000622"
+[1] "tig00000625"
+[1] "tig00000596"
+[1] "tig00001960"
+[1] "tig00000601"
+[1] "tig00001844"
+[1] "tig00000496"
+[1] "tig00001365"
+[1] "tig00002216"
+[1] "tig00001869"
+[1] "tig00000879"
+[1] "tig00000643"
+[1] "tig00000563"
+[1] "tig00017232"
+[1] "tig00017233"
+[1] "tig00000994"
+[1] "tig00001976"
+[1] "tig00001316"
+[1] "tig00000403"
+[1] "tig00000979"
+[1] "tig00017202"
+[1] "tig00001672"
+[1] "tig00000619"
+[1] "tig00000623"
+[1] "tig00000825"
+[1] "tig00000255"
+[1] "tig00002164"
+[1] "tig00017208"
+[1] "tig00017209"
+[1] "tig00000748"
+[1] "tig00017198"
+[1] "tig00017199"
+[1] "tig00017197"
+[1] "tig00017217"
+[1] "tig00017216"
+[1] "tig00000168"
+[1] "tig00001842"
+[1] "tig00000920"
+[1] "tig00001723"
+[1] "tig00001655"
+[1] "tig00000607"
+[1] "tig00002158"
+[1] "tig00001471"
+[1] "tig00000672"
+[1] "tig00001125"
+[1] "tig00001673"
+[1] "tig00001528"
+[1] "tig00001771"
+[1] "tig00000171"
+[1] "tig00001278"
+[1] "tig00001116"
+[1] "tig00000974"
+[1] "tig00000929"
+[1] "tig00017203"
+[1] "tig00001044"
+[1] "tig00002261"
+[1] "tig00000939"
+[1] "tig00001279"
+[1] "tig00001508"
+[1] "tig00000785"
+[1] "tig00001832"
+[1] "tig00000535"
+[1] "tig00001409"
+[1] "tig00001231"
+[1] "tig00001151"
+[1] "tig00002181"
+[1] "tig00000809"
+[1] "tig00001699"
+[1] "tig00001052"
+[1] "tig00000926"
+[1] "tig00017224"
+[1] "tig00001717"
+[1] "tig00001182"
+[1] "tig00000673"
+[1] "tig00001086"
+[1] "tig00001716"
+[1] "tig00000958"
+[1] "tig00001777"
+[1] "tig00001841"
+[1] "tig00001362"
+[1] "tig00002294"
+[1] "tig00002117"
+[1] "tig00001176"
+[1] "tig00017237"
+[1] "tig00001203"
+[1] "tig00001305"
+[1] "tig00001521"
+[1] "tig00001367"
+[1] "tig00001640"
+[1] "tig00001843"
+[1] "tig00001733"
+[1] "tig00000634"
+[1] "tig00002191"
+[1] "tig00001324"
+[1] "tig00000585"
+[1] "tig00001214"
+[1] "tig00000751"
+[1] "tig00002099"
+[1] "tig00001606"
+[1] "tig00001188"
+[1] "tig00001573"
+[1] "tig00001303"
+[1] "tig00001482"
+[1] "tig00000125"
+[1] "tig00000952"
+[1] "tig00000778"
+[1] "tig00002221"
+[1] "tig00017218"
+[1] "tig00017219"
+[1] "tig00001220"
+[1] "tig00002110"
+[1] "tig00001959"
+[1] "tig00001345"
+[1] "tig00000553"
+[1] "tig00001437"
+[1] "tig00000642"
+[1] "tig00000540"
+[1] "tig00000631"
+[1] "tig00001916"
+[1] "tig00001671"
+[1] "tig00000645"
+[1] "tig00000115"
+[1] "tig00000725"
+[1] "tig00000067"
+[1] "tig00000676"
+[1] "tig00002176"
+[1] "tig00001549"
+[1] "tig00000930"
+[1] "tig00002027"
+[1] "tig00000097"
+> 
+> #--process to obtain the sumary data (blastn6)
+> blastn4<-cut.cube.for.kappa(blastn3)
+> blastn5<-calculate.kappa(blastn4)
+> blastn6<-process.kappa.results(blastn5)
+> 
+> #--and augment blastn6 for easier intepretation: this is the main output table that permits selection of LR-genome and SR_pairs that are putative cognates for further examination with the plots below
+> blastn7<-augment.kappa.table(blastn6,blastn4)
+> 
+> #--produce concordance statistic summary plots (Supplementary Figures 12 and 13)
+> #--extra functions for plotting are here
+> source(file="local-plot-functions.r")
+> 
+> #--first make a slighly modified version of 'glq.contigs.summData' using our RKXM package (https://github.com/rbhwilliams/RKXM)
+> library(RKXM)
+> glq.contigs.summData.m2k<-simplify.contig.data(glq.contigs.summData,2000)
+> 
+> #--for Panel C, this is precomputed version of the reduced per-base coverage data from long and short read mapping to the LR genomes (see R script file called: cov-log-091219.r)
+> load(file="reducedCoverageProfiles.RData")
+> 
+> pdf(file="pao2-tig00000001-bin35-version3.pdf",width=12,height=8)
+> test.apd.tig00000001.bin35<-summary.plot.for.srac2lrac.single.ext3(blastn3$data,lracFasta,"tig00000001","bin.35",blastn7,glq.contigs.summData.m2k,pao2.srBin,sr2lracCovList[["PAO2-tig00000001"]],lr2lracCovList[["PAO2-tig00000001"]],c(1.5,2.5),c(0.5,0.8),1000)
+Loading required package: scales
+Bin widths will be between 50147 and 50148 bp in length
+> dev.off()
+null device 
+          1 
+> pdf(file="pao2-tig00000013-bin1-version3.pdf",width=12,height=8)
+> test.apd.tig00000001.bin35<-summary.plot.for.srac2lrac.single.ext3(blastn3$data,lracFasta,"tig00000013","bin.1",blastn7,glq.contigs.summData.m2k,pao2.srBin,sr2lracCovList[["PAO2-tig00000013"]],lr2lracCovList[["PAO2-tig00000013"]],c(1.5,2.5),c(0.5,0.8),1000)
+Bin widths will be between 34432 and 34433 bp in length
+> dev.off()
+null device 
+          1 
+> 
+> save.image(file="srac2lrac-example.RData")
+> 
+> sessionInfo()
+R version 3.6.1 (2019-07-05)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS High Sierra 10.13.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.6/Resources/lib/libRlapack.dylib
+
+locale:
+[1] C/UTF-8/C/C/C/C
+
+attached base packages:
+[1] stats4    parallel  stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+[1] scales_1.0.0        RKXM_1.0            abind_1.4-5        
+[4] Biostrings_2.54.0   XVector_0.26.0      IRanges_2.20.0     
+[7] S4Vectors_0.24.0    BiocGenerics_0.32.0
+
+loaded via a namespace (and not attached):
+ [1] Rcpp_1.0.2             RANN_2.6.1             gtools_3.8.1          
+ [4] identifier.mapping_1.0 magrittr_1.5           zlibbioc_1.32.0       
+ [7] orf.lcam_1.0           gdata_2.18.0           munsell_0.5.0         
+[10] igraph_1.2.4.1         compiler_3.6.1         colorspace_1.4-1      
+[13] pkgconfig_2.0.3       
+> 
+> proc.time()
+   user  system elapsed 
+ 60.437   6.439  66.961 
